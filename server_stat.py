@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template
 import msgpack
-from sqlalchemy import create_engine, Column, String, DateTime, Integer
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
@@ -12,42 +11,9 @@ from operator import itemgetter
 import json
 import os.path
 
+from model import Activity, Splash, Impression
+
 engine = create_engine('sqlite:///stats.db', echo=False)
-
-Base = declarative_base()
-
-
-class Activity(Base):
-    __tablename__ = "activities"
-
-    id = Column(Integer, primary_key=True)
-    moment = Column(DateTime)
-    user_id = Column(String(100))
-
-    def __init__(self, moment, user_id):
-        self.moment = moment
-        self.user_id = user_id
-
-
-class Splash(Base):
-    __tablename__ = 'splashs'
-    splash_id = Column(String, primary_key=True)
-    user_id = Column(String)
-
-    def __init__(self, splash_id, user_id):
-        self.splash_id = splash_id
-        self.user_id = user_id
-
-
-class Impression(Base):
-    __tablename__ = 'impressions'
-    id = Column(Integer, primary_key=True)
-    moment = Column(DateTime)
-    splash_id = Column(String)
-
-    def __init__(self, moment, splash_id):
-        self.moment = moment
-        self.splash_id = splash_id
 
 if not os.path.isfile('stats.db'):
     print "Creating db file"
