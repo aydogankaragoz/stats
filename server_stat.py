@@ -1,15 +1,14 @@
-from flask import Flask, request, render_template
-import msgpack
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func
 from datetime import datetime
 from collections import defaultdict
 from heapq import nlargest
 from operator import itemgetter
 import json
 import os.path
+from flask import Flask, request, render_template
+import msgpack
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import func
 
 from model import Activity, Splash, Impression
 
