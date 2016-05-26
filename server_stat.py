@@ -4,28 +4,43 @@ from heapq import nlargest
 from operator import itemgetter
 import json
 import os.path
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, g
 import msgpack
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
 
-from model import Activity, Splash, Impression
-
-engine = create_engine('sqlite:///stats.db', echo=False)
-
-if not os.path.isfile('stats.db'):
-    print "Creating db file"
-    Base.metadata.create_all(engine)
-
-Session = sessionmaker(bind=engine)
-session = Session()
-
+from model import Base, Activity, Splash, Impression
 
 app = Flask(__name__)
 
+app.config.update(
+    DATABASE='sqlite:///' + os.path.join(app.root_path, 'stats.db'),
+    DEBUG=True,
+    TESTING=False
+)
+
+
+def connect_db():
+    return create_engine(app.config['DATABASE'], echo=False)
+
+
+def init_db():
+    # Create the database tables.
+    engine = connect_db()
+    Base.metadata.create_all(engine)
+
+
+def get_session():
+    # session is stored in application global
+    if not hasattr(g, 'session'):
+        engine = connect_db()
+        Session = sessionmaker(bind=engine)
+        g.session = Session()
+    return g.session
+
 
 def dau():
+    session = get_session()
     active_users = []
     active_users.append(['Day', 'Active Users'])
     for value in session.query(
@@ -38,6 +53,7 @@ def dau():
 
 
 def wpu():
+    session = get_session()
     weekly_active_users = defaultdict(lambda: defaultdict(int))
     for value in session.query(func.date(Impression.moment), Splash.user_id, func.count(Splash.splash_id)).\
                                join(Splash, Impression.splash_id == Splash.splash_id).\
@@ -77,6 +93,7 @@ def dailyActiveUsers():
 
 @app.route('/submit', methods=['POST'])
 def submit():
+    session = get_session()
     payload = msgpack.unpackb(request.get_data())
     for msg in payload:
         moment = datetime.fromtimestamp(int(msg[0][:-9]))
