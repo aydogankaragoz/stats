@@ -14,14 +14,14 @@ from model import Base, Activity, Splash, Impression
 app = Flask(__name__)
 
 app.config.update(
-    DATABASE='sqlite:///' + os.path.join(app.root_path, 'stats.db'),
-    DEBUG=True,
-    TESTING=False
+    DATABASE = os.path.join(app.root_path, 'stats.db'),
+    DEBUG = True,
+    TESTING = False
 )
 
 
 def connect_db():
-    return create_engine(app.config['DATABASE'], echo=False)
+    return create_engine('sqlite:///' + app.config['DATABASE'], echo=False)
 
 
 def init_db():
